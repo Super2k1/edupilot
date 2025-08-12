@@ -1,4 +1,4 @@
-from rest_framework import generics , mixins
+from rest_framework import authentication ,generics , mixins , permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import accounts
@@ -6,11 +6,14 @@ from .serializers import accountSerializer
 from django.shortcuts import get_object_or_404
 from django.views import generic
 from rest_framework import status
+from .permissions import IsStaffEditorPermission
 
 
 class AccountCreateAPIView(generics.CreateAPIView):
     queryset = accounts.objects.all()
     serializer_class = accountSerializer
+    authentication_classes =[authentication.SessionAuthentication]
+    permission_classes = [IsStaffEditorPermission]
     def perform_create(self, serializer):
         #serializer.save(user=self.request.user)
         print(serializer.validated_data)
@@ -25,6 +28,7 @@ account_create_view = AccountCreateAPIView.as_view()
 class AccountListAPIView(generics.ListAPIView):
         queryset = accounts.objects.all()
         serializer_class = accountSerializer
+        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 account_list_view = AccountListAPIView.as_view()
@@ -85,8 +89,10 @@ account_delete_view = AccountDestroyAPIView.as_view()
 
 
 class AccountsMixinView(mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
                         mixins.RetrieveModelMixin,
-                         generics.GenericAPIView):
+                        generics.GenericAPIView):
+    
     queryset = accounts.objects.all()
     serializer_class = accountSerializer
     lookup_field = 'pk'
@@ -98,5 +104,17 @@ class AccountsMixinView(mixins.ListModelMixin,
             return self.retrieve(request, *args, **kwargs)
         
         return self.list(request, *args, **kwargs)
+    
+    def post(self,request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+    
+    def perform_create(self, serializer):
+        #serializer.save(user=self.request.user)
+        print(serializer.validated_data)
+        category_type = serializer.validated_data.get('category_type') or None
+        if category_type is not None:
+            category_type = category_type.lower()
+            print("this is cool view making a post request", category_type)
+        serializer.save(category_type=category_type)
     
 account_mixin_view = AccountsMixinView.as_view()

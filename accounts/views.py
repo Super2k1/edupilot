@@ -12,8 +12,9 @@ from .permissions import IsStaffEditorPermission
 class AccountCreateAPIView(generics.CreateAPIView):
     queryset = accounts.objects.all()
     serializer_class = accountSerializer
-    authentication_classes =[authentication.SessionAuthentication]
-    permission_classes = [IsStaffEditorPermission]
+    authentication_classes =[authentication.SessionAuthentication,
+                             authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission]
     def perform_create(self, serializer):
         #serializer.save(user=self.request.user)
         print(serializer.validated_data)
@@ -26,10 +27,17 @@ account_create_view = AccountCreateAPIView.as_view()
 
 
 class AccountListAPIView(generics.ListAPIView):
-        queryset = accounts.objects.all()
-        serializer_class = accountSerializer
-        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
+    queryset = accounts.objects.all()
+    serializer_class = accountSerializer
+    authentication_classes = [
+    authentication.TokenAuthentication,
+    authentication.SessionAuthentication
+    ]
+    permission_classes = [permissions.IsAuthenticated]
+    def get_queryset(self):
+        # Log the auth headers for debugging
+        print(f"Auth Headers: {self.request.headers.get('Authorization')}")
+        return super().get_queryset()
 
 account_list_view = AccountListAPIView.as_view()
 

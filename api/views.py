@@ -9,6 +9,7 @@ from .serializers import ProductSerializer
 from rest_framework import status
 from django.views import generic
 from rest_framework.views import APIView
+from api.authentications import TokenAuthentication
 # If you have a PostStatus enum, import it
 # from .models import PostStatus
 

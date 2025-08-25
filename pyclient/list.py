@@ -28,6 +28,7 @@ def main():
 
     if auth_response.status_code == 200:
         token = auth_response.json().get('token')
+        
         print("Authentication successful!")
         
         # Get accounts list
@@ -39,6 +40,7 @@ def main():
             print("\nAccounts List:")
             pretty_print_json(data)
             print(f"\nTotal accounts: {len(data)}")
+            print(f'token:{token}')
         else:
             print(f"Error accessing accounts: {response.text}")
     else:
